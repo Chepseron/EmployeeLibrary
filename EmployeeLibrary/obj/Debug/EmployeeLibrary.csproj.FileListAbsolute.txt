@@ -1,0 +1,5 @@
+C:\Users\Anonymous\Documents\NetBeansProjects\EmployeeLibrary\EmployeeLibrary\bin\Debug\EmployeeLibrary.dll
+C:\Users\Anonymous\Documents\NetBeansProjects\EmployeeLibrary\EmployeeLibrary\bin\Debug\EmployeeLibrary.pdb
+C:\Users\Anonymous\Documents\NetBeansProjects\EmployeeLibrary\EmployeeLibrary\obj\Debug\EmployeeLibrary.csprojResolveAssemblyReference.cache
+C:\Users\Anonymous\Documents\NetBeansProjects\EmployeeLibrary\EmployeeLibrary\obj\Debug\EmployeeLibrary.dll
+C:\Users\Anonymous\Documents\NetBeansProjects\EmployeeLibrary\EmployeeLibrary\obj\Debug\EmployeeLibrary.pdb
