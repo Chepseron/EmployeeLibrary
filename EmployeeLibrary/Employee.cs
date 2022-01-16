@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 
 namespace EmployeeLibrary
 {
@@ -10,9 +11,35 @@ namespace EmployeeLibrary
         {
             try
             {
-                empList = filterCSVToArray(csv);
-                ValidateSalaries(empList);
-                ValidateEmployReportTo(empList);
+                ArrayList data = new ArrayList();
+                if (string.IsNullOrEmpty(csv) || !(csv is string))
+                {
+                    WriteLog("csv is null");
+
+                }
+                string[] datarows = csv.Split(
+            new[] { Environment.NewLine },
+            StringSplitOptions.None
+            );
+
+                foreach (string row in datarows)
+                {
+                    string[] availableData = row.Split(',');
+                    ArrayList convertedData = new ArrayList();
+
+                    foreach (string cell in data)
+                    {
+                        convertedData.Add(cell);
+                    }
+                    if (convertedData.Count != 3)
+                    {
+                        WriteLog("CSV value must have 3 columns in each row");
+                    }
+                    data.Add(convertedData);
+                }
+                //Proceed to validate the data i.e check for circular reference and the managers the employees report to
+                ValidateSalaries(data);
+                EmployeeReportsTo(data);
             }
 
             catch (Exception e)
@@ -21,53 +48,6 @@ namespace EmployeeLibrary
             }
         }
 
-
-        /* This method returns csv array list converted from string
-         */
-
-        public ArrayList filterCSVToArray(string csv)
-        {
-            ArrayList cleanedData = new ArrayList();
-            if (string.IsNullOrEmpty(csv) || !(csv is string))
-            {
-                throw new Exception("csv cannot be null");
-
-            }
-
-            /**
-             *In CSV (Comma Separated Values), each line corresponds to a row, and columns are separated by a comma.
-             * We first divide data into rows so that we may and save the individual row as an array.
-             */
-
-            string[] datarows = csv.Split(
-            new[] { Environment.NewLine },
-            StringSplitOptions.None
-            );
-
-
-            /**
-             * After we have the rows in an array as words separated by commas, we split the words rows into arrays.
-             * The purpose of doing this is to be able to validate each data separately.
-             **/
-
-            foreach (string row in datarows)
-            {
-                string[] data = row.Split(',');
-                ArrayList filteredData = new ArrayList();
-
-                foreach (string cell in data)
-                {
-                    filteredData.Add(cell);
-                }
-                if (filteredData.Count != 3)
-                {
-                    throw new Exception("CSV value must have 3 values in each row");
-                }
-                cleanedData.Add(filteredData);
-            }
-
-            return cleanedData;
-        }
 
         /*
          *Validates if employees salaries are valid
@@ -81,7 +61,7 @@ namespace EmployeeLibrary
                 int number;
                 if (!(Int32.TryParse(employeeSalary, out number)))
                 {
-                    throw new Exception("Employees salaries must be a valid integer");
+                    WriteLog("Employees salaries must be an integer");
                 }
             }
         }
@@ -90,7 +70,7 @@ namespace EmployeeLibrary
          * Check if each employees reports to one manager;
          */
 
-        public void ValidateEmployReportTo(ArrayList employees)
+        public void EmployeeReportsTo(ArrayList employees)
         {
             ArrayList savedEmployees = new ArrayList();
             ArrayList managers = new ArrayList(); //List of managers
@@ -104,7 +84,8 @@ namespace EmployeeLibrary
 
                 if (savedEmployees.Contains(employeename.Trim()))
                 {
-                    throw new Exception("Employee value is duplicated this may be as a result of an employee reporting to more than one manager");
+
+                    WriteLog("Employee value is duplicated this may be as a result of an employee reporting to more than one manager");
                 }
 
                 savedEmployees.Add(employeename.Trim());
@@ -124,7 +105,8 @@ namespace EmployeeLibrary
             int managersDiff = employees.Count - managers.Count;
             if (managersDiff != 1)
             {
-                throw new Exception("We can't determine who is the CEO kindly look through your data");
+
+                WriteLog("No Company CEO");
             }
 
             // check if all managers are employess
@@ -132,7 +114,7 @@ namespace EmployeeLibrary
             {
                 if (!savedEmployees.Contains(manager.Trim()))
                 {
-                    throw new Exception("The list is incomplete it seems there are some managers who aren't listed in employess cell");
+                    WriteLog("Some managers do not exist in the list");
                 }
             }
 
@@ -161,7 +143,8 @@ namespace EmployeeLibrary
                     if ((managers.Contains(topManager.Trim()) && !ceos.Contains(topManager.Trim()))
                         || juniorEmployess.Contains(topManager.Trim()))
                     {
-                        throw new Exception("Circular reference error");
+
+                        WriteLog("Circular reference");
                     }
                 }
             }
@@ -174,20 +157,50 @@ namespace EmployeeLibrary
   *Return salary budgets of a specified manager
   * **/
 
-        public long managerSalaryBudget(string manageName)
+        public long SalaryBudget(string manager)
         {
-            long  totalManagerSalary = 0;
+            long totalManagerSalary = 0;
             foreach (ArrayList employee in empList)
             {
                 var name = employee[1] as string;
                 var employeeSalary = employee[2] as string;
                 var employeName = employee[0] as string;
-                if (name.Trim() == manageName.Trim() || employeName.Trim() == manageName.Trim())
+                if (name.Trim() == manager.Trim() || employeName.Trim() == manager.Trim())
                 {
                     totalManagerSalary += Convert.ToInt32(employeeSalary);
                 }
             }
             return totalManagerSalary;
+        }
+
+
+
+
+        public static void WriteLog(string content)
+        {
+            //this logs to the execution path of the application. in this case the debug folder under the application directory
+            string appPath = System.AppDomain.CurrentDomain.BaseDirectory;
+            StreamWriter log;
+            FileStream fileStream = null;
+            DirectoryInfo fullDirPath = null;
+            FileInfo fileInfo;
+
+            string filePath = appPath + "Logs\\";
+            filePath = filePath + "Log-" + System.DateTime.Today.ToString("MM-dd-yyyy") + "." + "txt";
+            fileInfo = new FileInfo(filePath);
+            fullDirPath = new DirectoryInfo(fileInfo.DirectoryName);
+            if (!fullDirPath.Exists) fullDirPath.Create();
+            if (!fileInfo.Exists)
+            {
+                fileStream = fileInfo.Create();
+            }
+            else
+            {
+                fileStream = new FileStream(filePath, FileMode.Append);
+            }
+            log = new StreamWriter(fileStream);
+            log.WriteLine(content);
+            log.Close();
         }
 
     }
